@@ -12,6 +12,8 @@ import os
 from numpy import genfromtxt
 from PIL import Image
 import numpy as np
+from torchvision.transforms.functional import to_tensor
+from transform import *
 
 # =============================================================================
 #  Annotation information
@@ -51,22 +53,26 @@ class Detection_dataset(Dataset):
         
     def __getitem__(self, index):
         image_path = self.image_pool[index]
-        image = Image.open(image_path)
+        image = np.array(Image.open(image_path))
+        print(image_path)
+        image_path = image_path.replace("\\", "/")
         image_name = image_path.split('/')[-1][:-4]
         anno_data = genfromtxt(os.path.join(self.anno_path, "{}.txt".format(image_name)), delimiter=',')
-        anno_data[:, 1:4:2] /= image.size[1]
-        anno_data[:, 0:4:2] /= image.size[0]
-        anno_data = anno_data[:-3]
+        anno_data[:, 1:4:2] /= image.shape[0]
+        anno_data[:, 0:4:2] /= image.shape[1]
         assert anno_data[:, :4].min() >= 0, "Bounding box smaller than zero. {}".format(image_name)
         assert anno_data[:, :4].max() <= 1, "Bounding box smaller than zero. {}".format(image_name)
-        image, anno_data = transform(image, anno_data)
+        image, anno_data = self.transform(image, anno_data)
+        image_norm = to_tensor(image)
+        image_norm = Normalize(image_norm)
         
-        return image, anno_data
+        return image_norm, anno_data, image
 
 if __name__ == '__main__':
     from function import draw_bbox
     from transform import *
     transform = Compose([Resize((1024, 1024)), RandomFlip(0.1)])
-    dataset = Detection_dataset("../datasets/visdrone/VisDrone2019-DET-train/images", "../datasets/visdrone/VisDrone2019-DET-train/annotations", transform)
-    img, anno = dataset[100]
+    dataset = Detection_dataset("../dataset/VisDrone2019-DET-train/images", "../dataset/VisDrone2019-DET-train/annotations", transform)
+    img_norm, anno, img = dataset[100]
     draw_bbox(img, anno)
+    print(img.shape)

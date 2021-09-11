@@ -15,7 +15,7 @@ class RandomFlip():
     def __call__(self, image, bbox):
         if self.prob < np.random.rand(1):
             bbox[:, 0] = 1.0 - bbox[:, 0] - bbox[:, 2]
-            image = ImageOps.mirror(image)
+            image = image[:, ::-1, :].copy()
             
         return image, bbox
     
@@ -27,7 +27,18 @@ class Resize():
             self.size = size
     
     def __call__(self, image, bbox):
+        image = Image.fromarray(image)
         image = image.resize(self.size)
+        image = np.array(image)
+        return image, bbox
+    
+class Normalize():
+    def __init__(self, mean = (0.485, 0.456, 0.406), std = (0.229, 0.224, 0.225)):
+        self.mean = np.array(mean)
+        self.std = np.array(std)
+    
+    def __call__(self, image, bbox):
+        image = (image - np.expand_dims(np.expand_dims(self.mean, axis = -1), axis = -1)) / np.expand_dims(np.expand_dims(self.std, axis = -1), axis = -1)
         return image, bbox
 
 class Compose():
