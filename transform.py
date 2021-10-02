@@ -37,9 +37,9 @@ class Normalize():
         self.mean = np.array(mean)
         self.std = np.array(std)
     
-    def __call__(self, image, bbox):
+    def __call__(self, image):
         image = (image - np.expand_dims(np.expand_dims(self.mean, axis = -1), axis = -1)) / np.expand_dims(np.expand_dims(self.std, axis = -1), axis = -1)
-        return image, bbox
+        return image
 
 class Compose():
     def __init__(self, transforms):

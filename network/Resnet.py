@@ -240,11 +240,13 @@ class ResNet(nn.Module):
 
         x = self.layer1(x)
         x = self.layer2(x)
+        x2 = x
         x = self.layer3(x)
+        x3 = x
         x = self.layer4(x)
+        x4 = x
 
-
-        return x
+        return x2, x3, x4
 
     def forward(self, x: Tensor) -> Tensor:
         return self._forward_impl(x)
